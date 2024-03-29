@@ -10,6 +10,7 @@ import controllollers.Auth;
 import controllollers.DashboardController;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -99,6 +100,24 @@ public class Dashboard extends javax.swing.JFrame {
             };
             model.addRow(row);
         }
+    }
+    private void loadProductTable(List<Product> productList){
+        DefaultTableModel model = (DefaultTableModel) produt_table.getModel();
+        model.setRowCount(0); // Clear the existing table data
+        
+        for (Product product : productList) {
+            Object[] row = {
+                product.getId(),
+                product.getBarcode(),
+                product.getName(),
+                product.getWholesale_price(),
+                product.getRetail_price(),
+                product.getDiscount(),
+                product.getIs_active() == 1 ? "Active" : "Deactive"
+            };
+            model.addRow(row);
+        }
+        
     }
 
     private Units getUnitComboBoxSelectedItem() {
@@ -672,13 +691,18 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void tf_name_ENKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_name_ENKeyReleased
         // TODO add your handling code here:
-        String name = tf_name_EN.getText();
-        for(Product p : productList){
-            if(p.getName().toLowerCase().equals(name.toLowerCase())){
-                selectedProduct = p;
-                setDatatoProductFields(p);
-                break;
+        String searchword = tf_name_EN.getText();
+        
+        if (!searchword.isBlank()) {
+            List<Product> products = new ArrayList<>();
+            for (Product p : productList) {
+                if (p.getName().toLowerCase().startsWith(searchword.toLowerCase())) {
+                    products.add(p);
+                }
             }
+            loadProductTable(products);
+        } else {
+            loadProductTable();
         }
     }//GEN-LAST:event_tf_name_ENKeyReleased
 
