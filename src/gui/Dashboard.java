@@ -313,6 +313,12 @@ public class Dashboard extends javax.swing.JFrame {
 
         jLabel3.setText("Barcode");
 
+        tf_barcode.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tf_barcodeKeyReleased(evt);
+            }
+        });
+
         jLabel4.setText("Wholesale Price");
 
         tf_wholesalePrice.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
@@ -652,6 +658,25 @@ public class Dashboard extends javax.swing.JFrame {
 
     }//GEN-LAST:event_btn_updateActionPerformed
 
+    private void tf_barcodeKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_barcodeKeyReleased
+        // TODO add your handling code here:
+        System.out.println(tf_barcode.getText());
+        selectUsingBarcode();
+    }//GEN-LAST:event_tf_barcodeKeyReleased
+
+    
+    private void selectUsingBarcode(){
+        String barcode = tf_barcode.getText();
+        for (Product p : productList) {
+            if (!p.getBarcode().isBlank()) {
+                if (p.getBarcode().equals(barcode)) {
+                    selectedProduct = p;
+                    setDatatoProductFields(p);
+                    break;
+                }
+            }
+        }
+    }
     /**
      * @param args the command line arguments
      */

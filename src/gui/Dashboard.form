@@ -354,6 +354,9 @@
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JTextField" name="tf_barcode">
+                      <Events>
+                        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="tf_barcodeKeyReleased"/>
+                      </Events>
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel4">
                       <Properties>
