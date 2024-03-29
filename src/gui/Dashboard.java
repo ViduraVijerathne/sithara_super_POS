@@ -682,7 +682,7 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tf_name_ENKeyReleased
 
-    
+//    done
     private void selectUsingBarcode(){
         String barcode = tf_barcode.getText();
         for (Product p : productList) {
