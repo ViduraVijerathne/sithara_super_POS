@@ -338,6 +338,12 @@ public class Dashboard extends javax.swing.JFrame {
 
         jLabel7.setText("Product Name(EN)");
 
+        tf_name_EN.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tf_name_ENKeyReleased(evt);
+            }
+        });
+
         jLabel8.setText("Product Name (SI)");
 
         jLabel9.setText("Units");
@@ -663,6 +669,18 @@ public class Dashboard extends javax.swing.JFrame {
         System.out.println(tf_barcode.getText());
         selectUsingBarcode();
     }//GEN-LAST:event_tf_barcodeKeyReleased
+
+    private void tf_name_ENKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_name_ENKeyReleased
+        // TODO add your handling code here:
+        String name = tf_name_EN.getText();
+        for(Product p : productList){
+            if(p.getName().toLowerCase().equals(name.toLowerCase())){
+                selectedProduct = p;
+                setDatatoProductFields(p);
+                break;
+            }
+        }
+    }//GEN-LAST:event_tf_name_ENKeyReleased
 
     
     private void selectUsingBarcode(){
