@@ -5,15 +5,22 @@
 package gui;
 
 import controllollers.DashboardController;
+import java.awt.print.PageFormat;
+import java.awt.print.Pageable;
+import java.awt.print.Paper;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.print.DocFlavor;
+import javax.print.attribute.Attribute;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.standard.MediaSizeName;
 import javax.swing.JOptionPane;
@@ -21,7 +28,9 @@ import javax.swing.table.DefaultTableModel;
 import models.InvoiceTotal;
 import models.Product;
 import models.Units;
+import utlis.InvoicePageStatus;
 import utlis.InvoiceTemplate;
+import utlis.InvoiceTempletePages;
 import utlis.Validator;
 
 /**
@@ -662,20 +671,17 @@ public class SellProduct extends javax.swing.JPanel {
                             .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel8)
-                                .addGap(25, 25, 25))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(tf_invoiceTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(6, 6, 6)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
                                 .addComponent(jLabel9)
                                 .addGap(27, 27, 27))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(tf_allDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(6, 6, 6)))
+                                .addGap(18, 18, 18)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel10)
@@ -711,7 +717,7 @@ public class SellProduct extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 20, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -722,22 +728,21 @@ public class SellProduct extends javax.swing.JPanel {
                         .addComponent(jButton4))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jLabel9)
-                        .addGap(28, 28, 28))
+                        .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel10)
                             .addComponent(jLabel12)
-                            .addComponent(jLabel13))
+                            .addComponent(jLabel13)
+                            .addComponent(tf_allDiscount))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(jButton3)
                                 .addComponent(tf_cash, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(tf_allDiscount)
                                 .addComponent(tf_invoiceTotal)
                                 .addComponent(tf_grandTotal))
-                            .addComponent(tf_balance))))
-                .addContainerGap())
+                            .addComponent(tf_balance)))))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -829,7 +834,7 @@ public class SellProduct extends javax.swing.JPanel {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-         refreshCashBalance();
+        refreshCashBalance();
         Product p = getProductFromField();
         if (p.getQty() > 0) {
             if (p.getDiscount() < p.getRetail_price()) {
@@ -851,7 +856,7 @@ public class SellProduct extends javax.swing.JPanel {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
-       
+
         double cash = 0;
         double balance = 0;
         if (invoiceProducts.isEmpty()) {
@@ -878,34 +883,131 @@ public class SellProduct extends javax.swing.JPanel {
                     return;
                 }
             }
+//temp start
+            if (invoiceProducts.size() < 10) {
+                fullInvoicePrinter(invoiceStrID, cash, balance);
+//                pagevicePrinter(invoiceStrID, cash, balance);
 
-            InvoiceTemplate invoice = new InvoiceTemplate(invoiceProducts, invoiceStrID, invoiceTotalCalculate(), cash, balance);
-            // Print the invoice
-            PrinterJob job = PrinterJob.getPrinterJob();
-
-            // Set print attributes
-            HashPrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
-            attrs.add(MediaSizeName.INVOICE); // Adjust as per your paper size requirement
-
-            job.setPrintable(invoice);
-            try {
-
-                job.print(attrs);
-                invoiceProducts.clear();
-                loadInvoiceTable();
-                tf_cash.setText("0.00");
-                tf_balance.setText("0.00");
-                
-
-            } catch (PrinterException e) {
-                JOptionPane.showMessageDialog(null, "Error printing invoice: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                pagevicePrinter(invoiceStrID, cash, balance);
             }
+            //temp end
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
             PrintingJobStatates_ISRUN = false;
 //                Logger.getLogger(SellProduct.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton3ActionPerformed
+//Set<Product> invoiceProducts = new HashSet<>();
+
+    private void pagevicePrinter(String invoiceStrID, double cash, double balance) {
+        int firstProductMaxCount = 13;
+        int middleProductMaxCount = 12;
+        int lastProductMaxCount = 10;
+
+        Set<Product> firstProducts = new HashSet<>();
+        Set<Product> middleProducts = new HashSet<>();
+        Set<Product> lastProducts = new HashSet<>();
+
+        int count = 0;
+        for (Product product : invoiceProducts) {
+            if (count < firstProductMaxCount) {
+                firstProducts.add(product);
+            } else if (count < lastProductMaxCount) {
+                lastProducts.add(product);
+            } else {
+                middleProducts.add(product);
+            }
+            count++;
+        }
+
+        if (!firstProducts.isEmpty() && middleProducts.isEmpty() && lastProducts.isEmpty()) {
+            InvoicePrinterPages(Arrays.asList(InvoicePageStatus.FIRST, InvoicePageStatus.MIDDLE, InvoicePageStatus.LAST), invoiceProducts, invoiceStrID, cash, balance);
+        } else if (!firstProducts.isEmpty() && !middleProducts.isEmpty() && lastProducts.isEmpty()) {
+            InvoicePrinterPages(Arrays.asList(InvoicePageStatus.FIRST, InvoicePageStatus.MIDDLE), firstProducts, invoiceStrID, cash, balance);
+            InvoicePrinterPages(Arrays.asList(InvoicePageStatus.MIDDLE, InvoicePageStatus.LAST), middleProducts, invoiceStrID, cash, balance);
+        } else if (!firstProducts.isEmpty() && !middleProducts.isEmpty() && !lastProducts.isEmpty()) {
+            InvoicePrinterPages(Arrays.asList(InvoicePageStatus.FIRST, InvoicePageStatus.MIDDLE), firstProducts, invoiceStrID, cash, balance);
+            List<Set<Product>> setList = new ArrayList<>();
+
+            if (middleProducts.size() > middleProductMaxCount) {
+                Iterator<Product> iterator = middleProducts.iterator();
+                Set<Product> listItem = new HashSet<>();
+                int pItemcount = 0;
+
+                while (iterator.hasNext()) {
+                    Product p = iterator.next();
+
+                    if (middleProductMaxCount == pItemcount) {
+                        InvoicePrinterPages(Arrays.asList(InvoicePageStatus.MIDDLE), listItem, invoiceStrID, cash, balance);
+                        pItemcount = 0;
+                        listItem.clear();
+                    } else {
+                        listItem.add(p);
+                        pItemcount++;
+                        iterator.remove(); // Remove the current element using the iterator
+                    }
+                }
+            } else {
+                InvoicePrinterPages(Arrays.asList(InvoicePageStatus.MIDDLE), middleProducts, invoiceStrID, cash, balance);
+            }
+
+            InvoicePrinterPages(Arrays.asList(InvoicePageStatus.LAST), lastProducts, invoiceStrID, cash, balance);
+        }
+
+    }
+
+    private void InvoicePrinterPages(List<InvoicePageStatus> status, Set<Product> products, String invoiceStrID, double cash, double balance) {
+        InvoiceTempletePages invoice = new InvoiceTempletePages(products, invoiceStrID, invoiceTotalCalculate(), cash, balance);
+        invoice.invoicePageStatus = status;
+        PrinterJob job = PrinterJob.getPrinterJob();
+//
+//            // Set print attributes
+        HashPrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
+        attrs.add(MediaSizeName.INVOICE); // Adjust as per your paper size requirement
+//            attrs.add(attribute)
+//        
+        job.setPrintable(invoice);
+
+        try {
+            job.print(attrs);
+
+//                job.print();
+            invoiceProducts.clear();
+            loadInvoiceTable();
+            tf_cash.setText("0.00");
+            tf_balance.setText("0.00");
+
+        } catch (PrinterException e) {
+            JOptionPane.showMessageDialog(null, "Error printing invoice: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void fullInvoicePrinter(String invoiceStrID, double cash, double balance) {
+        InvoiceTemplate invoice = new InvoiceTemplate(invoiceProducts, invoiceStrID, invoiceTotalCalculate(), cash, balance);
+
+        PrinterJob job = PrinterJob.getPrinterJob();
+//
+//            // Set print attributes
+        HashPrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
+        attrs.add(MediaSizeName.INVOICE); // Adjust as per your paper size requirement
+//            attrs.add(attribute)
+//        
+        job.setPrintable(invoice);
+
+        try {
+            job.print(attrs);
+
+//                job.print();
+            invoiceProducts.clear();
+            loadInvoiceTable();
+            tf_cash.setText("0.00");
+            tf_balance.setText("0.00");
+
+        } catch (PrinterException e) {
+            JOptionPane.showMessageDialog(null, "Error printing invoice: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     private void invoiceJTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_invoiceJTableMouseClicked
         // TODO add your handling code here:
@@ -928,13 +1030,9 @@ public class SellProduct extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Please Select a Row To Delete !", "oops!", JOptionPane.ERROR_MESSAGE);
             return;
         }
-                 refreshCashBalance();
+        refreshCashBalance();
 
         removeItemFromInvoiceProductList(selectedInvoiceProduct);
-        
-       
-
-        
 
 
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -950,7 +1048,7 @@ public class SellProduct extends javax.swing.JPanel {
         invoiceProducts.clear();
         loadInvoiceTable();
         tf_cash.setText("0.00");
-                tf_balance.setText("0.00");
+        tf_balance.setText("0.00");
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
@@ -1012,10 +1110,10 @@ public class SellProduct extends javax.swing.JPanel {
             tf_balance.setText(Double.toString(balance));
         }
     }
-    
-    private void refreshCashBalance(){
+
+    private void refreshCashBalance() {
         System.out.println("Running here=================");
-         tf_balance.setText("0.00");
-         tf_cash.setText("");
+        tf_balance.setText("0.00");
+        tf_cash.setText("");
     }
 }

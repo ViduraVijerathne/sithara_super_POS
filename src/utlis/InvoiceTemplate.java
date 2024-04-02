@@ -10,6 +10,7 @@ package utlis;
  */
 import java.awt.*;
 import java.awt.print.PageFormat;
+import java.awt.print.Paper;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.io.File;
@@ -38,6 +39,9 @@ public class InvoiceTemplate implements Printable {
 
     double cash = 0;
     double balance = 0;
+    
+    public double invoiceWidth = 0;
+    public int invoiceHight = 0;
 
     public InvoiceTemplate(Set<Product> products, String invoiceID, InvoiceTotal invoiceTotal, double cash, double balance) {
         this.products = products;
@@ -136,9 +140,23 @@ public class InvoiceTemplate implements Printable {
 
         Graphics2D g2d = (Graphics2D) graphics;
         g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-
         int x = 10; // Starting X position
         int y = 20; // Starting Y position
+
+        // Calculate total height required for printing content
+        int totalHeight = calculateTotalHeight(pageFormat);
+        invoiceHight = totalHeight;
+        invoiceWidth = pageFormat.getImageableWidth();
+
+        System.out.println("page format+" + pageFormat.getHeight());
+        // Adjust page height if necessary
+        if (totalHeight > pageFormat.getImageableHeight()) {
+            Paper paper = pageFormat.getPaper();
+            paper.setSize(pageFormat.getWidth(), totalHeight);
+            pageFormat.setPaper(paper);
+//            pageFormat
+        }
+        System.out.println("page format+" + pageFormat.getHeight());
 
 //        // Print shop name
 //        Font titleFont = new Font("Arial", Font.BOLD, 14);
@@ -183,6 +201,8 @@ public class InvoiceTemplate implements Printable {
         }
         y += addressMetrics.getHeight();
         graphics.setFont(sinhalaReg);
+
+        System.out.println("END OF HEAD :" + y);
         // Print table content
         for (Product product : products) {
             x = 10; // Reset X position for each row
@@ -209,6 +229,7 @@ public class InvoiceTemplate implements Printable {
 
         }
 
+        System.out.println("END OF BODY :" + y);
         // Print totals
         y += 5; // Add some space between table and totals
         graphics.drawLine(x, y - 5, (int) pageFormat.getImageableWidth(), y - 5);
@@ -217,8 +238,8 @@ public class InvoiceTemplate implements Printable {
         int totalWidth = totalMetrix.stringWidth("ගෙවිය යුතු මුලු මුදල : රු." + String.format("%.2f", invoiceTotal.getGrandTotal()));
         int subTotalWidth = totalMetrix.stringWidth("මුළු වටිනාකම (වට්ටම් රහිත) : රු." + String.format("%.2f", invoiceTotal.getInviceTotal()));
         int discountWidth = totalMetrix.stringWidth("මුළු වට්ටම   : රු." + String.format("%.2f", invoiceTotal.getAllDiscount()));
-        int cashWidth =  totalMetrix.stringWidth("දුන් මුදල : රු." + String.format("%.2f", cash)); 
-        int balanceWidth =  totalMetrix.stringWidth("ඉතිරි දුන් මුදල : රු." + String.format("%.2f", balance));
+        int cashWidth = totalMetrix.stringWidth("දුන් මුදල : රු." + String.format("%.2f", cash));
+        int balanceWidth = totalMetrix.stringWidth("ඉතිරි දුන් මුදල : රු." + String.format("%.2f", balance));
         x = (int) pageFormat.getImageableWidth() - subTotalWidth;
         y += 15; // Add a little space before the total text
         graphics.drawString("මුළු වටිනාකම (වට්ටම් රහිත) : රු." + String.format("%.2f", invoiceTotal.getInviceTotal()), x, y);
@@ -256,6 +277,24 @@ public class InvoiceTemplate implements Printable {
         int greetingWidth = greetingMetrics.stringWidth("ස්තූතියි..!  නැවත එන්න.");
         graphics.drawString("ස්තූතියි..!  නැවත එන්න.", (int) (pageFormat.getImageableWidth() - greetingWidth) / 2, y);
 //        graphics.drawLine(x, y, (int) pageFormat.getImageableWidth(), y);
+        System.out.println("END OF FOOTER :" + y);
+        y  = invoiceHight;
+        graphics.drawLine(0,y, 500, y);
         return PAGE_EXISTS;
     }
+
+    private int calculateTotalHeight(PageFormat pageFormat) {
+        // Calculate the total height required for printing the content
+        int totalHeight = 0;
+        // Add the height required for each section of the invoice
+        int headSize = 184;
+        int bodySize = 29 * products.size();
+        int footer = cash == 0 ? 101 : 143;
+        int margin = 1000;
+        totalHeight = headSize + bodySize + footer+margin;
+        System.out.println("FULL SIZE : " + totalHeight);
+        // Adjust totalHeight accordingly
+        return totalHeight;
+    }
+
 }
